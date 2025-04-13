@@ -1,6 +1,22 @@
-##Chatbot for Disease prediction
-## Project Overview
+# Medical Symptoms Prediction Project
 
-This project is a chatbot that helps users diagnose potential diseases based on their reported symptoms. It leverages a **Large Language Model (LLM)** for natural language understanding and **Retrieval-Augmented Generation (RAG)** for retrieving relevant information from a knowledge base and generating responses.
+## Overview
+The Medical Conditions Project is a prototype system designed to retrieve and generate responses about medical conditions based on user-provided symptoms using Retrieval-Augmented Generation (RAG). It processes datasets (e.g., NHS conditions, symptom-disease mappings, and disease-symptom data), embeds them into a Pinecone vector database, and integrates with a language model to provide context-aware responses. The project includes a React frontend, a FastAPI backend, and initial RAG components.
 
-The chatbot is designed to assist users in identifying possible diseases based on their symptoms. It uses advanced machine learning models and a custom-built retrieval system to provide contextually accurate and useful information.
+## Features
+- **Data Processing**: Ingests and embeds medical condition data into Pinecone.
+- **Frontend**: A React-based UI for inputting symptoms and displaying results.
+- **Backend**: A FastAPI API with `/query` and `/health` endpoints.
+- **RAG**: Partial implementation with a retriever (Pinecone queries) and generator (LLM responses) under development.
+
+## Prerequisites
+- **Python 3.10+**
+- **Node.js 14+**
+- **Pinecone API Key** 
+
+## Setup
+
+### 1. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd medical_conditions_project
