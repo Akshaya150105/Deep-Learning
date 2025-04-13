@@ -14,9 +14,3 @@ The Medical Conditions Project is a prototype system designed to retrieve and ge
 - **Node.js 14+**
 - **Pinecone API Key** 
 
-## Setup
-
-### 1. Clone the Repository
-```bash
-git clone <your-repo-url>
-cd medical_conditions_project
