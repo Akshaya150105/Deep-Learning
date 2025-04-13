@@ -1,0 +1,48 @@
+.app {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .symptom-input {
+    padding: 8px;
+    font-size: 16px;
+    flex-grow: 1;
+  }
+  
+  .search-button {
+    padding: 8px 16px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .search-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .results {
+    margin-top: 20px;
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  h3 {
+    color: #555;
+  }
+  
+  p, ul {
+    color: #666;
+  }
