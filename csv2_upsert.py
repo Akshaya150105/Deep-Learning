@@ -59,34 +59,42 @@ def upsert_to_pinecone(data, namespace, batch_size=50):
     # Process items and create embeddings
     for i, item in enumerate(data):
         try:
-            # Use overview as the primary text for embedding (no combination with symptoms)
-            description = str(item.get("overview", ""))
+            # Clean and join symptoms for embedding
+            symptoms = item.get("symptoms", [])
             
-            # Store item metadata with all available fields
+            
+            # Join cleaned symptoms into a single string for embedding
+            symptoms_text = ", ".join(symptoms) if symptoms else item.get("condition", "")
+            
+            # Store item metadata with all available fields from CSV2
             item_id = f"{namespace}-{i}"
             item_metadata = {
                 "id": item_id,
-                "conditions": item.get("condition", ""),
-                "symptoms": item.get("symptoms", []),
-                "overview": description,
-                #"url": item.get("url", ""),
+                "condition": item.get("condition", ""),
+                "symptoms": symptoms,  # Keep as list in metadata
+                "overview": item.get("overview", ""),
+                "preventions": item.get("preventions", ""),
+                "causes": item.get("causes", ""),
+                "url": item.get("url", ""),
                 "source": namespace
             }
             texts.append(item_metadata)
             
-            # Create embedding with retry logic using overview
+            # Create embedding with retry logic using symptoms_text
             max_retries = 3
             for attempt in range(max_retries):
                 try:
-                    embedding = embedder.encode(description, convert_to_numpy=True)
+                    embedding = embedder.encode(symptoms_text, convert_to_numpy=True)
                     all_vectors.append((
                         item_id,
                         embedding.tolist(),
                         {
                             "condition": item_metadata["condition"],
                             "symptoms": item_metadata["symptoms"],
-                            "overview": item_metadata["description"],
-                            #"url": item_metadata["url"],
+                            "overview": item_metadata["overview"],
+                            "preventions": item_metadata["preventions"],
+                            "causes": item_metadata["causes"],
+                            "url": item_metadata["url"],
                             "source": item_metadata["source"]
                         }
                     ))
@@ -135,7 +143,7 @@ try:
     print("CSV2 head:\n", csv2.head())
     
     csv2_texts = []
-    batch_size = 20  # Keep batching for memory management
+    batch_size = 50  # Keep batching for memory management
     all_csv2_data = []  # Collect all data in one list
     
     for i in range(0, len(csv2), batch_size):
@@ -169,7 +177,7 @@ try:
                 
                 batch_data.append({
                     "condition": condition.strip().title(),
-                    "symptoms": symptoms[:5],  # Limit to 5 symptoms for consistency
+                    "symptoms": symptoms,  
                     "overview": overview,      # Full overview without truncation
                     "preventions": preventions,
                     "causes": causes,
@@ -187,54 +195,3 @@ try:
 except Exception as e:
     print(f"Error processing CSV2: {e}")
     csv2_texts = []
-
-'''# -------------------- NHS PROCESSING SECOND --------------------
-print("\nProcessing NHS data...")
-try:
-    with open(data_folder / "nhs_conditions_all.json", "r") as f:
-        json_data = json.load(f)
-    nhs_texts = upsert_to_pinecone(json_data, "nhs")
-except Exception as e:
-    print(f"Error processing NHS data: {e}")
-    nhs_texts = []'''
-
-'''# -------------------- CSV1 PROCESSING LAST --------------------
-print("\nProcessing CSV1 data from JSON file...")
-try:
-    # Load the processed JSON file that was created by your extraction script
-    processed_json_path = data_folder / "processed_csv1_data.json"
-    
-    with open(processed_json_path, "r", encoding="utf-8") as f:
-        csv1_data = json.load(f)
-    
-    print(f"Loaded {len(csv1_data)} entries from processed JSON")
-    
-    # Add URL field if not present in your JSON structure
-    for item in csv1_data:
-        if "url" not in item:
-            item["url"] = ""
-    
-    # Print a sample entry for verification
-    if csv1_data:
-        print("Sample entry from processed JSON:")
-        print(json.dumps(csv1_data[0], indent=2))
-    
-    # Use the upsert function with the loaded data
-    csv1_texts = upsert_to_pinecone(csv1_data, "csv1")
-    
-except Exception as e:
-    print(f"Error processing CSV1 from JSON: {e}")
-    csv1_texts = []
-
-# Save texts for reference'''
-'''print("\nSaving text data...")
-all_texts = {"nhs": nhs_texts, "csv1": csv1_texts, "csv2": csv2_texts}
-try:
-    with open(data_folder / "texts.json", "w") as f:
-        json.dump(all_texts, f)
-    print(f"Successfully saved texts to {data_folder / 'texts.json'}")
-except Exception as e:
-    print(f"Error saving texts: {e}")
-
-
-print("\nScript completed!")'''

@@ -59,34 +59,35 @@ def upsert_to_pinecone(data, namespace, batch_size=50):
     # Process items and create embeddings
     for i, item in enumerate(data):
         try:
-            # Use overview as the primary text for embedding (no combination with symptoms)
-            description = str(item.get("overview", ""))
+            # Clean and join symptoms for embedding
+            symptoms = item.get("symptoms", [])
+            
+            # Join cleaned symptoms into a single string for embedding
+            symptoms_text = ", ".join(symptoms) if symptoms else item.get("condition", "")
             
             # Store item metadata with all available fields
             item_id = f"{namespace}-{i}"
             item_metadata = {
                 "id": item_id,
-                "conditions": item.get("condition", ""),
-                "symptoms": item.get("symptoms", []),
-                "overview": description,
-                #"url": item.get("url", ""),
+                "condition": item.get("condition", ""),
+                "symptoms": symptoms,  # Keep as list in metadata
+                "description": item.get("description", ""),
                 "source": namespace
             }
             texts.append(item_metadata)
             
-            # Create embedding with retry logic using overview
+            # Create embedding with retry logic using symptoms_text
             max_retries = 3
             for attempt in range(max_retries):
                 try:
-                    embedding = embedder.encode(description, convert_to_numpy=True)
+                    embedding = embedder.encode(symptoms_text, convert_to_numpy=True)
                     all_vectors.append((
                         item_id,
                         embedding.tolist(),
                         {
                             "condition": item_metadata["condition"],
                             "symptoms": item_metadata["symptoms"],
-                            "overview": item_metadata["description"],
-                            #"url": item_metadata["url"],
+                            "description": item_metadata["description"],
                             "source": item_metadata["source"]
                         }
                     ))
@@ -127,78 +128,7 @@ def upsert_to_pinecone(data, namespace, batch_size=50):
     
     return texts
 
-# -------------------- CSV2 PROCESSING FIRST --------------------
-# Process CSV2 (new dataset with Overview) in batches
-print("\nProcessing CSV2 data...")
-try:
-    csv2 = pd.read_csv(data_folder / "disease_symptoms_dataset.csv", low_memory=False)
-    print("CSV2 head:\n", csv2.head())
-    
-    csv2_texts = []
-    batch_size = 20  # Keep batching for memory management
-    all_csv2_data = []  # Collect all data in one list
-    
-    for i in range(0, len(csv2), batch_size):
-        print(f"\nProcessing CSV2 batch {i//batch_size + 1}/{(len(csv2) + batch_size - 1)//batch_size}")
-        batch = csv2.iloc[i:i+batch_size]
-        batch_data = []
-        
-        for index, row in batch.iterrows():
-            try:
-                condition = str(row.get("Disease", ""))
-                if condition.lower() == "nan" or not condition.strip():
-                    continue
-                symptoms_text = str(row.get("Symptoms", ""))
-                symptoms = []
-                if symptoms_text.lower() != "nan" and symptoms_text.strip():
-                    symptoms = [s.strip() for s in symptoms_text.split(".") 
-                              if s.strip() and any(word in s.lower() for word in 
-                                                 ["pain", "fatigue", "itching", "swelling", "fever"])]
-                overview = str(row.get("Overview", ""))
-                if overview.lower() == "nan":
-                    overview = ""
-                preventions = str(row.get("Preventions", ""))
-                if preventions.lower() == "nan":
-                    preventions = ""
-                causes = str(row.get("Causes", ""))
-                if causes.lower() == "nan":
-                    causes = ""
-                url = str(row.get("Link", ""))
-                if url.lower() == "nan":
-                    url = ""
-                
-                batch_data.append({
-                    "condition": condition.strip().title(),
-                    "symptoms": symptoms[:5],  # Limit to 5 symptoms for consistency
-                    "overview": overview,      # Full overview without truncation
-                    "preventions": preventions,
-                    "causes": causes,
-                    "url": url
-                })
-            except Exception as e:
-                print(f"Error processing CSV2 row {index}: {e}")
-        all_csv2_data.extend(batch_data)
-        gc.collect()
-    
-    # Upsert all csv2 data into a single namespace
-    if all_csv2_data:
-        csv2_texts = upsert_to_pinecone(all_csv2_data, "csv2")
-    
-except Exception as e:
-    print(f"Error processing CSV2: {e}")
-    csv2_texts = []
-
-'''# -------------------- NHS PROCESSING SECOND --------------------
-print("\nProcessing NHS data...")
-try:
-    with open(data_folder / "nhs_conditions_all.json", "r") as f:
-        json_data = json.load(f)
-    nhs_texts = upsert_to_pinecone(json_data, "nhs")
-except Exception as e:
-    print(f"Error processing NHS data: {e}")
-    nhs_texts = []'''
-
-'''# -------------------- CSV1 PROCESSING LAST --------------------
+# -------------------- CSV1 PROCESSING LAST --------------------
 print("\nProcessing CSV1 data from JSON file...")
 try:
     # Load the processed JSON file that was created by your extraction script
@@ -226,15 +156,3 @@ except Exception as e:
     print(f"Error processing CSV1 from JSON: {e}")
     csv1_texts = []
 
-# Save texts for reference'''
-'''print("\nSaving text data...")
-all_texts = {"nhs": nhs_texts, "csv1": csv1_texts, "csv2": csv2_texts}
-try:
-    with open(data_folder / "texts.json", "w") as f:
-        json.dump(all_texts, f)
-    print(f"Successfully saved texts to {data_folder / 'texts.json'}")
-except Exception as e:
-    print(f"Error saving texts: {e}")
-
-
-print("\nScript completed!")'''

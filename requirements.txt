@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pandas
+sentence-transformers
+pinecone-client
+numpy
+transformers
+torch
