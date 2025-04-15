@@ -1,65 +1,52 @@
-from transformers import pipeline
+from retriver import retrieve
+from transformers import (
+    AutoTokenizer, 
+    AutoModelForSeq2SeqLM,
+    pipeline
+)
+import torch
 
-# Initialize LLM (using a lightweight model)
-generator = pipeline("text-generation", model="distilgpt2", max_length=150)
+# Load the FLAN-T5 model (instruction-tuned, no [INST] format)
+model_name = "google/flan-t5-base"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(
+    model_name,
+    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+    device_map="auto"
+)
 
-def generate_response(retrieved_data, user_query):
-    """
-    Generate a natural language response based on retrieved medical conditions.
-    
-    Args:
-        retrieved_data (list): List of condition dictionaries from retriever.py
-        user_query (str): Original symptoms query (e.g., "itching,fatigue,yellowish skin")
-    
-    Returns:
-        str: Generated response with medical advice and next steps
-    """
-    try:
-        if not retrieved_data or not retrieved_data[0].get("condition"):
-            return "No relevant conditions found for your symptoms. Please consult a healthcare professional."
+def generate(symptom_query, top_k=1):
+    symptom_query = symptom_query.strip()
+    retrieved_info = retrieve(symptom_query, top_k=top_k)
 
-        # Extract top condition for detailed response
-        top_condition = retrieved_data[0]
-        symptoms_list = user_query.split(",")
-        
-        # Construct context from top condition
-        context = (
-            f"Condition: {top_condition['condition']}\n"
-            f"Matched Symptoms: {', '.join(top_condition['symptoms'])}\n"
-            f"Summary: {top_condition['summary']}\n"
-        )
-        if top_condition["overview"] != "Not available":
-            context += f"Overview: {top_condition['overview']}\n"
-        if top_condition["preventions"] != "Not available":
-            context += f"Preventions: {top_condition['preventions']}\n"
-        if top_condition["url"] != "Not available":
-            context += f"More Info: {top_condition['url']}\n"
+    if not retrieved_info:
+        return "Sorry, I couldn't find any medical conditions matching your symptoms."
 
-        # Build prompt with user query and context
-        prompt = (
-            f"Based on the following medical context: {context}\n"
-            f"User query: I am experiencing {', '.join(symptoms_list)}.\n"
-            f"Provide a concise, helpful response with advice and next steps for the user. Ensure the tone is professional yet reassuring."
-        )
+    context_chunks = []
+    for item in retrieved_info:
+        chunk = f"""
+        Condition: {item['condition']}
+        Symptoms: {', '.join(item['symptoms'])}
+        Summary: {item['summary']}
+        Preventions: {item['preventions']}
+        Causes: {item['causes']}
+        """
+        context_chunks.append(chunk.strip())
 
-        # Generate response
-        response = generator(prompt, max_length=150, num_return_sequences=1, truncation=True)[0]['generated_text']
-        generated_text = response[len(prompt):].strip()  # Remove prompt from response
-        
-        # Ensure response is meaningful; fallback if too short
-        if len(generated_text.split()) < 3:
-            return f"Based on your symptoms ({user_query}), {top_condition['condition']} is a possible condition. Please consult a doctor for a proper diagnosis."
-        
-        return generated_text
+    context = "\n\n".join(context_chunks)
 
-    except Exception as e:
-        print(f"Error generating response: {e}")
-        return "Error generating response. Please try again or consult a healthcare professional."
+    prompt = f"""You are a helpful medical assistant. Use the following data to explain what might be causing the symptoms: {symptom_query}.\n\n{context}\n\nProvide a concise, professional explanation."""
 
-# Example usage for testing
+    inputs = tokenizer(prompt, return_tensors="pt")
+    inputs = {k: v.to(model.device) for k, v in inputs.items()}
+
+    output = model.generate(**inputs, max_new_tokens=300, do_sample=True, temperature=0.7)
+    result = tokenizer.decode(output[0], skip_special_tokens=True)
+
+    return result.strip()
+
+# Example usage
 if __name__ == "__main__":
-    from retriver import retrieve
-    test_symptoms = "itching,fatigue,yellowish skin"
-    retrieved_conditions = retrieve(test_symptoms)
-    response = generate_response(retrieved_conditions, test_symptoms)
-    print("Generated Response:", response)
+    symptoms = "itching, fatigue, yellowish skin"
+    answer = generate(symptoms)
+    print("\nGenerated Answer:\n", answer)
