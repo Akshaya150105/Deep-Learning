@@ -12,7 +12,7 @@ The project implements a Retrieval-Augmented Generation (RAG) system designed to
 - **Data Processing**: Ingests and embeds medical condition data into Pinecone.
 - **Frontend**: A React-based UI for inputting symptoms and displaying results.
 - **Backend**: A FastAPI API with `/query` and `/health` endpoints.
-- **RAG**: Partial implementation with a retriever (Pinecone queries) and generator (LLM responses).
+- **RAG**: implementation with a retriever (Pinecone queries) and generator (LLM responses).
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/f16a1667-38de-41d5-abcc-a5479dda46a0)
 This is Home Page
