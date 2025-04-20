@@ -1,43 +1,52 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+from rag.generator import generate_response
 
 app = FastAPI(title="Medical Symptom API")
-from fastapi.middleware.cors import CORSMiddleware
 
+# CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 @app.get("/query")
-async def get_medical_response(symptoms: str):
+async def get_medical_response(symptoms: str = Query(...), is_follow_up: bool = Query(False)):
     """
     Get a medical response based on input symptoms.
-    Example: /query?symptoms=itching,fatigue,yellowish skin
+    Example: /query?symptoms=body%20ache&is_follow_up=false
     """
     if not symptoms:
         return JSONResponse(status_code=400, content={"error": "Symptoms parameter is required"})
 
-    # Placeholder response (to be replaced with RAG logic)
     try:
-        # Simulate processing delay
-        import time
-        time.sleep(1)
+        logger.info(f"Query: '{symptoms}', is_follow_up: {is_follow_up}")
+        response = generate_response(symptoms, is_follow_up)
         
-        placeholder_response = f"Analyzing symptoms: {symptoms}. Possible condition: Jaundice (based on yellowish skin, itching). Consult a doctor."
-        placeholder_conditions = [
-            {"condition": "Jaundice", "text": "Yellowish skin, itching, fatigue..."},
-            {"condition": "Hepatitis", "text": "Fatigue, abdominal pain..."}
-        ]
-
-        return {
-            "symptoms": symptoms,
-            "response": placeholder_response,
-            "conditions": placeholder_conditions
-        }
+        # Handle both string and dict responses from generator.py
+        if isinstance(response, dict):
+            return {
+                "symptoms": symptoms,
+                "response": response.get("response", ""),
+                "conditions": response.get("conditions", [])
+            }
+        else:
+            return {
+                "symptoms": symptoms,
+                "response": response,
+                "conditions": []
+            }
     except Exception as e:
+        logger.error(f"Error: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/health")
