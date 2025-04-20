@@ -1,4 +1,4 @@
-# Medical Symptoms Prediction Project
+# Medical Symptoms Prediction Chatbot
 
 ## Overview
 The project implements a Retrieval-Augmented Generation (RAG) system designed to assist users by retrieving relevant medical conditions based on symptoms and generating natural, reassuring responses with advice. The system leverages Pinecone for vector-based retrieval, Sentence Transformers for embeddings, and Mistral-7B-Insfruct-v0.2 for generating human-like responses. It is tailored for preliminary health guidance purposes, with a strong emphasis on encouraging professional medical consultation. 
