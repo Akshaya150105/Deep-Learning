@@ -1,13 +1,18 @@
 # Medical Symptoms Prediction Project
 
 ## Overview
-The Medical Conditions Project is a prototype system designed to retrieve and generate responses about medical conditions based on user-provided symptoms using Retrieval-Augmented Generation (RAG). It processes datasets (e.g., NHS conditions, symptom-disease mappings, and disease-symptom data), embeds them into a Pinecone vector database, and integrates with a language model to provide context-aware responses. The project includes a React frontend, a FastAPI backend, and initial RAG components.
+The project implements a Retrieval-Augmented Generation (RAG) system designed to assist users by retrieving relevant medical conditions based on symptoms and generating natural, reassuring responses with advice. The system leverages Pinecone for vector-based retrieval, Sentence Transformers for embeddings, and Mistral-7B-Insfruct-v0.2 for generating human-like responses. It is tailored for preliminary health guidance purposes, with a strong emphasis on encouraging professional medical consultation. 
+
+      Retrieve the top matching medical conditions from a knowledge base using symptom inputs. 
+      Generate conversational, empathetic responses with medical advice and next steps. 
+      Ensure scalability and accuracy through vector search and domain-specific language modeling. 
+     
 
 ## Features
 - **Data Processing**: Ingests and embeds medical condition data into Pinecone.
 - **Frontend**: A React-based UI for inputting symptoms and displaying results.
 - **Backend**: A FastAPI API with `/query` and `/health` endpoints.
-- **RAG**: Partial implementation with a retriever (Pinecone queries) and generator (LLM responses) under development.
+- **RAG**: Partial implementation with a retriever (Pinecone queries) and generator (LLM responses).
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/f16a1667-38de-41d5-abcc-a5479dda46a0)
 ![image](https://github.com/user-attachments/assets/3486fe6e-747a-4d51-8f63-6bac7968f4e8)
