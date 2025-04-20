@@ -15,11 +15,14 @@ The project implements a Retrieval-Augmented Generation (RAG) system designed to
 - **RAG**: Partial implementation with a retriever (Pinecone queries) and generator (LLM responses).
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/f16a1667-38de-41d5-abcc-a5479dda46a0)
+This is Home Page
 ![image](https://github.com/user-attachments/assets/3486fe6e-747a-4d51-8f63-6bac7968f4e8)
+Gives the causes
 ![image](https://github.com/user-attachments/assets/03b0a186-fda4-4a20-a191-1ed80a48a480)
+Gives the prevention
 ![image](https://github.com/user-attachments/assets/3c46b094-c705-40fd-9e6d-c85a2cd138a0)
 
-
+Provides a conversational response.
 
 
 
