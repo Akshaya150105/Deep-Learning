@@ -14,6 +14,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const [theme, setTheme] = useState('light');
+  const [isFollowUp, setIsFollowUp] = useState(false); // Track follow-up state
 
   // Auto-scroll to bottom when new messages appear
   useEffect(() => {
@@ -30,6 +31,11 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  const detectFollowUp = (text) => {
+    const followUpKeywords = ['prevent', 'prevention', 'avoid', 'cause', 'causes', 'why', 'how', 'symptom', 'symptoms'];
+    return followUpKeywords.some(keyword => text.toLowerCase().includes(keyword)) && messages.length > 1;
   };
 
   const handleSubmit = async (e) => {
@@ -54,11 +60,14 @@ function App() {
       sender: 'bot',
       isTyping: true
     }]);
-
+    
+    
+    
     try {
-      // Make API request
-      const res = await axios.get(`http://localhost:8000/query?symptoms=${input}`);
-      
+      const detectedFollowUp = detectFollowUp(input);
+      setIsFollowUp(detectedFollowUp);
+      // Make API request with is_follow_up
+      const res = await axios.get(`http://localhost:8000/query?symptoms=${encodeURIComponent(input)}&is_follow_up=${detectedFollowUp}`);      
       // Remove typing indicator
       setMessages(prevMessages => prevMessages.filter(m => m.id !== 'typing'));
       
@@ -83,6 +92,10 @@ function App() {
         
         setMessages(prevMessages => [...prevMessages, conditionsMessage]);
       }
+
+      // Reset isFollowUp after processing unless it's a clear follow-up intent
+      // You can enhance this logic based on user input patterns (e.g., "how to prevent")
+      setIsFollowUp(false); // Reset unless manually set (e.g., via checkbox or detection)
     } catch (error) {
       // Remove typing indicator
       setMessages(prevMessages => prevMessages.filter(m => m.id !== 'typing'));
@@ -117,6 +130,7 @@ function App() {
         sender: 'bot',
       }
     ]);
+    setIsFollowUp(false); // Reset follow-up state
   };
 
   const renderMessageContent = (message) => {
