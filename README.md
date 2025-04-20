@@ -11,7 +11,6 @@ The Medical Conditions Project is a prototype system designed to retrieve and ge
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/f16a1667-38de-41d5-abcc-a5479dda46a0)
 ![image](https://github.com/user-attachments/assets/3486fe6e-747a-4d51-8f63-6bac7968f4e8)
-![image](https://github.com/user-attachments/assets/72e96937-916c-43e3-ae96-f7db99111f2a)
 ![image](https://github.com/user-attachments/assets/03b0a186-fda4-4a20-a191-1ed80a48a480)
 ![image](https://github.com/user-attachments/assets/3c46b094-c705-40fd-9e6d-c85a2cd138a0)
 
